@@ -118,3 +118,28 @@ CPU yükü, veritabanı baskısı, latency artışı, rate limit riski..
 - Load Balancing: Tek sunucu yanıt veremiyorsa, API servisini ölçekle → birden fazla instance. NGINX / AWS ELB gibi yük dengeleyici kullan.
 - DB Performans Ayarları: Index kontrolü, Query optimizasyon, Connection pool sınırı.
 
+### `Load Balancing Nedir?`
+**Cevap**
+Gelen trafiği arka planda çalışan birden fazla sunucuya dengeli bir şekilde dağıtan sistemdir.
+- Performansı artırmak.
+- Sunucular arası yükü dengelemek.
+- Kesintisiz hizmet sağlamak (failover).
+- Load Balancer Nasıl Konumlanır?
+```
+Kullanıcılar
+     ↓
+[ Load Balancer ]
+   ↓     ↓     ↓
+App 1   App 2  App 3  (Backend sunucuları)
+```
+-  Ne Tür Yükler Dengelenir?
+ - HTTP istekleri (web/API trafiği)
+ - TCP bağlantıları
+ - Veritabanı sorguları (örneğin read-replica sistemleri)
+ - Mail, FTP gibi özel servisler
+
+- Load Balancing Yöntemleri?
+ - Round Robin,  Least Connections, IP Hashing, Weighted Round Robin. Eğer size yöntem sorarlarsa güzel bir paraya işe giriyorsunuz demektir :D
+-  Dikkat Edilmesi Gerekenler?
+ - Session tutarlılığı gerekirse Sticky sessions veya Redis tabanlı centralized session. (sonra benim kullanıcım neden logout oldu demeyin, ya session ortak bir yerde saklayın redis vs ya da sticky session ile ip hash => sunucu da tutun ama o zaman neden load balancer yapıyoruz tek sunucudan besleneceksek?)
+ - Health check yapılmazsa, Bozuk sunucuya istek gitmeye devam eder → health_check_interval, timeout ayarlanmalı.
