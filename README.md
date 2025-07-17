@@ -80,3 +80,41 @@ Tüm istekler önce API Gateway’e gelir, oradan ilgili servislere yönlendiril
 | 1         | 102    | Mont     |
 - 3NF: Hiçbir non-key alan, başka bir non-key alana transitif (dolaylı) bağımlı olmamalı. Yani özetle bir tabloda hem şehir hem posta hem müşteri adı hem müşteri id olmaz. Şehir ve posta kodu ayrı tabloda olması lazım.
 
+
+### `CQRS(Command Query Responsibility Segregation) ne zaman kullanılır?`
+**Cevap**
+- Karmaşık domainlerde(e-ticaret-finans vb.)
+- Okuma ve yazma yükleri çok farklıysa (o zaman okumaya ve yazmaya fark ORM kullanabilirsiniz!)
+- Read tarafında düşük latency ihtiyacı varsa.
+- Küçük, CRUD tabanlı sistemlerde kullanmaya ihtiyacın yok. Bas geç :)
+
+**Kaynak**
+CQRS: Okuma (Query) ve yazma (Command) işlemlerinin sorumluluklarını ayıran bir mimari yaklaşımdır.
+Bu sayede sistemin karmaşıklığı yönetilebilir hale gelir ve farklı ölçeklenebilirlik ihtiyaçlarına göre optimize edilebilir. CQRS genellikle event sourcing ile birlikte gelir.	CommandHandler, QueryHandler patternleri ile uyumludur.
+
+### `Middleware Yapıları Nasıl Kurgulanmalı?`
+**Cevap**
+Middleware, bir isteğin gelişim sürecinde araya giren yapıların tümüdür: loglama, auth, hata yönetimi, vs.
+``Request → Middleware 1 → Middleware 2 → Controller → Response`` gibi.
+- Küçük, bağımsız yapılara böl (Single Responsibility)
+- Sıralama önemlidir! Örn: auth önce, log sonra (sırayla çalışırlar sıralamayı karıştırırsan bazı data kayıpları olabilir.)
+- Ortak reusable yapı olarak yaz → tüm endpoint’lerde kullanılır.
+
+### `Token-based Authentication vs Session-based Authentication?`
+**Cevap**
+Token-Based Auth(JWT): Mobile, SPA, microservices
+- Avantajları: Sunucu tarafında state tutulmaz, Microservice mimarilerine uygundur, Frontend’ler arası geçiş kolaydır (Web → Mobil).
+- Dezavantajlar: Token süresi boyunca yetki iptal edilemez (blacklist ile çözüm gerekir),Token payload decode edilebilir (şifrelenmeli değilse).
+Session-Based Auth: Klasik web uygulamaları, Her client için benzersiz session oluşturulur.
+- Avantajları: Oturum üzerinde daha fazla kontrol, Session server’da iptal edilebilir.
+- Dezavantajlar: Ölçeklenebilirlik sorunları (session replication gerekir), Mobile API’lerde taşınabilir değil.
+
+### ` Bir API Endpoint’i Saniyede 1000 İstek Almaya Başlarsa Ne Yaparsın?`
+**Cevap**
+CPU yükü, veritabanı baskısı, latency artışı, rate limit riski..
+- Rate Limiting Uygula: Kullanıcı başına istek sınırı koy (IP ya da API key bazlı)
+- Cache Layer Kullan: Sık çağrılan veri ise MemoryCache, Redis, CDN katmanı ile response’u cache’le
+- Async / Queue Yapısı: ğer istek işlem gerektiriyorsa (mail gönderme, PDF üretme) → bir kuyruğa (RabbitMQ, Kafka) gönder.
+- Load Balancing: Tek sunucu yanıt veremiyorsa, API servisini ölçekle → birden fazla instance. NGINX / AWS ELB gibi yük dengeleyici kullan.
+- DB Performans Ayarları: Index kontrolü, Query optimizasyon, Connection pool sınırı.
+
