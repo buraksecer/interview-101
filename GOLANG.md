@@ -1,6 +1,6 @@
 # Go (Golang) Interview Hazırlık Notları
 
-Bu dosya, Go programlama dili ile ilgili interview hazırlık notlarını içerir. Yksek trafikli sistemlerde kullanılan Go konuları soru-cevap formatında düzenlenmiştir.
+Bu dosya, Go programlama dili ile ilgili interview hazırlık notlarını içerir. Yüksek trafikli sistemlerde kullanılan Go konuları soru-cevap formatında düzenlenmiştir.
 
 ---
 
