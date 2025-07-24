@@ -1041,3 +1041,750 @@ public class Dog : Animal
     }
 }
 ```
+
+
+### `En Yaygın 5 Design Pattern Nedir?`
+
+---
+
+### `1. Saga Pattern nedir ve ne zaman kullanılır?`
+
+**Cevap:** 
+Saga Pattern, mikroservisler arası uzun süren transaction'ları yönetmek için kullanılan pattern'dir. Distributed transaction'ları choreography veya orchestration ile yönetir.
+
+**Kaynak:** 
+- **Choreography Saga**: Her servis kendi adımını bilir ve event publish eder
+- **Orchestration Saga**: Merkezi orchestrator tüm süreci yönetir
+- **Compensation**: Hata durumunda geri alma işlemleri
+- **Eventual Consistency**: Nihai tutarlılık sağlar
+
+**Örnek:**
+```csharp
+// Orchestration Saga Pattern
+public class OrderSaga
+{
+    private readonly IPaymentService _paymentService;
+    private readonly IInventoryService _inventoryService;
+    private readonly IShippingService _shippingService;
+    private readonly IOrderService _orderService;
+    
+    public async Task<SagaResult> ProcessOrderAsync(Order order)
+    {
+        var sagaState = new OrderSagaState { OrderId = order.Id };
+        
+        try
+        {
+            // Step 1: Reserve inventory
+            sagaState.InventoryReservationId = await _inventoryService.ReserveAsync(order.Items);
+            
+            // Step 2: Process payment
+            sagaState.PaymentId = await _paymentService.ChargeAsync(order.Amount, order.PaymentDetails);
+            
+            // Step 3: Create shipping
+            sagaState.ShippingId = await _shippingService.CreateShipmentAsync(order.ShippingAddress);
+            
+            // Step 4: Confirm order
+            await _orderService.ConfirmOrderAsync(order.Id);
+            
+            return SagaResult.Success();
+        }
+        catch (Exception ex)
+        {
+            // Compensation - geri alma işlemleri
+            await CompensateAsync(sagaState);
+            return SagaResult.Failure(ex.Message);
+        }
+    }
+    
+    private async Task CompensateAsync(OrderSagaState state)
+    {
+        if (state.ShippingId.HasValue)
+            await _shippingService.CancelShipmentAsync(state.ShippingId.Value);
+        
+        if (state.PaymentId.HasValue)
+            await _paymentService.RefundAsync(state.PaymentId.Value);
+        
+        if (state.InventoryReservationId.HasValue)
+            await _inventoryService.ReleaseReservationAsync(state.InventoryReservationId.Value);
+    }
+}
+
+// Choreography Saga Pattern
+public class InventoryService
+{
+    public async Task ReserveInventoryAsync(Order order)
+    {
+        // Inventory reserve logic
+        
+        if (success)
+        {
+            await _eventBus.PublishAsync(new InventoryReservedEvent 
+            { 
+                OrderId = order.Id, 
+                Items = order.Items 
+            });
+        }
+        else
+        {
+            await _eventBus.PublishAsync(new InventoryReservationFailedEvent 
+            { 
+                OrderId = order.Id 
+            });
+        }
+    }
+}
+
+public class PaymentService
+{
+    public async Task HandleInventoryReservedAsync(InventoryReservedEvent @event)
+    {
+        // Payment processing logic
+        
+        if (paymentSuccess)
+        {
+            await _eventBus.PublishAsync(new PaymentProcessedEvent 
+            { 
+                OrderId = @event.OrderId 
+            });
+        }
+        else
+        {
+            await _eventBus.PublishAsync(new PaymentFailedEvent 
+            { 
+                OrderId = @event.OrderId 
+            });
+            
+            // Compensate inventory
+            await _eventBus.PublishAsync(new CompensateInventoryEvent 
+            { 
+                OrderId = @event.OrderId 
+            });
+        }
+    }
+}
+```
+
+---
+
+### `2. Factory Pattern nedir ve türleri nelerdir?`
+
+**Cevap:** 
+Factory Pattern, nesne oluşturma sorumluluğunu ayrı bir sınıfa veren creational pattern'dir. Simple Factory, Factory Method ve Abstract Factory olmak üzere 3 türü vardır.
+
+**Kaynak:** 
+- **Simple Factory**: Statik metod ile nesne oluşturma
+- **Factory Method**: Alt sınıfların hangi nesneyi oluşturacağına karar vermesi
+- **Abstract Factory**: İlişkili nesne ailelerini oluşturma
+- **Creator vs Product**: Oluşturan vs oluşturulan
+
+**Örnek:**
+```csharp
+// Simple Factory
+public class LoggerFactory
+{
+    public static ILogger CreateLogger(LoggerType type)
+    {
+        return type switch
+        {
+            LoggerType.File => new FileLogger(),
+            LoggerType.Database => new DatabaseLogger(),
+            LoggerType.Console => new ConsoleLogger(),
+            _ => throw new ArgumentException("Invalid logger type")
+        };
+    }
+}
+
+// Factory Method Pattern
+public abstract class DocumentCreator
+{
+    public abstract IDocument CreateDocument();
+    
+    public void ProcessDocument()
+    {
+        var document = CreateDocument();
+        document.Open();
+        document.Save();
+        document.Close();
+    }
+}
+
+public class WordDocumentCreator : DocumentCreator
+{
+    public override IDocument CreateDocument()
+    {
+        return new WordDocument();
+    }
+}
+
+public class PdfDocumentCreator : DocumentCreator
+{
+    public override IDocument CreateDocument()
+    {
+        return new PdfDocument();
+    }
+}
+
+// Abstract Factory Pattern
+public interface IUIFactory
+{
+    IButton CreateButton();
+    ITextbox CreateTextbox();
+    ICheckbox CreateCheckbox();
+}
+
+public class WindowsUIFactory : IUIFactory
+{
+    public IButton CreateButton() => new WindowsButton();
+    public ITextbox CreateTextbox() => new WindowsTextbox();
+    public ICheckbox CreateCheckbox() => new WindowsCheckbox();
+}
+
+public class MacUIFactory : IUIFactory
+{
+    public IButton CreateButton() => new MacButton();
+    public ITextbox CreateTextbox() => new MacTextbox();
+    public ICheckbox CreateCheckbox() => new MacCheckbox();
+}
+
+public class Application
+{
+    private readonly IUIFactory _uiFactory;
+    
+    public Application(IUIFactory uiFactory)
+    {
+        _uiFactory = uiFactory;
+    }
+    
+    public void CreateUI()
+    {
+        var button = _uiFactory.CreateButton();
+        var textbox = _uiFactory.CreateTextbox();
+        var checkbox = _uiFactory.CreateCheckbox();
+    }
+}
+```
+
+---
+
+### `3. Observer Pattern nedir ve ne zaman kullanılır?`
+
+**Cevap:** 
+Observer Pattern, bir nesnenin durumu değiştiğinde bağımlı nesnelerin otomatik olarak bilgilendirilmesini sağlayan behavioral pattern'dir.
+
+**Kaynak:** 
+- **Subject**: Gözlemlenen nesne (Observable)
+- **Observer**: Gözlemleyen nesneler
+- **Event-driven Architecture**: Olay tabanlı mimari
+- **Loose Coupling**: Gevşek bağlantı sağlar
+
+**Örnek:**
+```csharp
+public interface IObserver<T>
+{
+    void Update(T data);
+}
+
+public interface ISubject<T>
+{
+    void Subscribe(IObserver<T> observer);
+    void Unsubscribe(IObserver<T> observer);
+    void Notify(T data);
+}
+
+public class StockPrice : ISubject<decimal>
+{
+    private readonly List<IObserver<decimal>> _observers = new();
+    private decimal _price;
+    
+    public decimal Price
+    {
+        get => _price;
+        set
+        {
+            _price = value;
+            Notify(_price);
+        }
+    }
+    
+    public void Subscribe(IObserver<decimal> observer)
+    {
+        _observers.Add(observer);
+    }
+    
+    public void Unsubscribe(IObserver<decimal> observer)
+    {
+        _observers.Remove(observer);
+    }
+    
+    public void Notify(decimal price)
+    {
+        foreach (var observer in _observers)
+        {
+            observer.Update(price);
+        }
+    }
+}
+
+public class StockDisplay : IObserver<decimal>
+{
+    private readonly string _displayName;
+    
+    public StockDisplay(string displayName)
+    {
+        _displayName = displayName;
+    }
+    
+    public void Update(decimal price)
+    {
+        Console.WriteLine($"{_displayName}: Stock price updated to {price:C}");
+    }
+}
+
+public class StockAlert : IObserver<decimal>
+{
+    private readonly decimal _threshold;
+    
+    public StockAlert(decimal threshold)
+    {
+        _threshold = threshold;
+    }
+    
+    public void Update(decimal price)
+    {
+        if (price > _threshold)
+        {
+            Console.WriteLine($"ALERT: Stock price {price:C} exceeded threshold {_threshold:C}!");
+        }
+    }
+}
+
+// Kullanım
+var stock = new StockPrice();
+var display1 = new StockDisplay("Main Display");
+var display2 = new StockDisplay("Mobile App");
+var alert = new StockAlert(100m);
+
+stock.Subscribe(display1);
+stock.Subscribe(display2);
+stock.Subscribe(alert);
+
+stock.Price = 95m; // Tüm observer'lar bilgilendirilir
+stock.Price = 105m; // Alert da tetiklenir
+
+// C# Events ile Observer Pattern
+public class Stock
+{
+    public event Action<decimal> PriceChanged;
+    
+    private decimal _price;
+    public decimal Price
+    {
+        get => _price;
+        set
+        {
+            _price = value;
+            PriceChanged?.Invoke(_price);
+        }
+    }
+}
+
+// Kullanım
+var stock = new Stock();
+stock.PriceChanged += price => Console.WriteLine($"Price changed to {price:C}");
+stock.PriceChanged += price => { if (price > 100) Console.WriteLine("High price alert!"); };
+stock.Price = 105m;
+```
+
+---
+
+### `4. Strategy Pattern nedir ve Command Pattern'dan farkı nedir?`
+
+**Cevap:** 
+Strategy Pattern, runtime'da algoritmayı değiştirmeyi sağlayan behavioral pattern'dir. Command Pattern ise istekleri nesneler olarak kapsüller.
+
+**Kaynak:** 
+- **Strategy**: Algoritma değiştirme (HOW)
+- **Command**: İstek kapsülleme (WHAT)
+- **Context**: Strategy kullanan sınıf
+- **Encapsulation**: İş mantığını kapsülleme
+
+**Strategy Pattern Örneği:**
+```csharp
+public interface IPaymentStrategy
+{
+    PaymentResult ProcessPayment(decimal amount, PaymentDetails details);
+}
+
+public class CreditCardStrategy : IPaymentStrategy
+{
+    public PaymentResult ProcessPayment(decimal amount, PaymentDetails details)
+    {
+        Console.WriteLine($"Processing {amount:C} via Credit Card");
+        // Credit card logic
+        return PaymentResult.Success();
+    }
+}
+
+public class PayPalStrategy : IPaymentStrategy
+{
+    public PaymentResult ProcessPayment(decimal amount, PaymentDetails details)
+    {
+        Console.WriteLine($"Processing {amount:C} via PayPal");
+        // PayPal logic
+        return PaymentResult.Success();
+    }
+}
+
+public class CryptoStrategy : IPaymentStrategy
+{
+    public PaymentResult ProcessPayment(decimal amount, PaymentDetails details)
+    {
+        Console.WriteLine($"Processing {amount:C} via Cryptocurrency");
+        // Crypto logic
+        return PaymentResult.Success();
+    }
+}
+
+public class PaymentContext
+{
+    private IPaymentStrategy _strategy;
+    
+    public PaymentContext(IPaymentStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+    
+    public void SetStrategy(IPaymentStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+    
+    public PaymentResult ProcessPayment(decimal amount, PaymentDetails details)
+    {
+        return _strategy.ProcessPayment(amount, details);
+    }
+}
+
+// Kullanım
+var paymentContext = new PaymentContext(new CreditCardStrategy());
+paymentContext.ProcessPayment(100m, paymentDetails);
+
+// Runtime'da strateji değiştirme
+paymentContext.SetStrategy(new PayPalStrategy());
+paymentContext.ProcessPayment(200m, paymentDetails);
+```
+
+**Command Pattern Örneği:**
+```csharp
+public interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+public class CreateFileCommand : ICommand
+{
+    private readonly string _fileName;
+    private bool _executed = false;
+    
+    public CreateFileCommand(string fileName)
+    {
+        _fileName = fileName;
+    }
+    
+    public void Execute()
+    {
+        File.Create(_fileName);
+        _executed = true;
+        Console.WriteLine($"File {_fileName} created");
+    }
+    
+    public void Undo()
+    {
+        if (_executed && File.Exists(_fileName))
+        {
+            File.Delete(_fileName);
+            Console.WriteLine($"File {_fileName} deleted");
+        }
+    }
+}
+
+public class DeleteFileCommand : ICommand
+{
+    private readonly string _fileName;
+    private string _fileContent;
+    private bool _executed = false;
+    
+    public DeleteFileCommand(string fileName)
+    {
+        _fileName = fileName;
+    }
+    
+    public void Execute()
+    {
+        if (File.Exists(_fileName))
+        {
+            _fileContent = File.ReadAllText(_fileName);
+            File.Delete(_fileName);
+            _executed = true;
+            Console.WriteLine($"File {_fileName} deleted");
+        }
+    }
+    
+    public void Undo()
+    {
+        if (_executed)
+        {
+            File.WriteAllText(_fileName, _fileContent);
+            Console.WriteLine($"File {_fileName} restored");
+        }
+    }
+}
+
+public class FileManager
+{
+    private readonly Stack<ICommand> _commandHistory = new();
+    
+    public void ExecuteCommand(ICommand command)
+    {
+        command.Execute();
+        _commandHistory.Push(command);
+    }
+    
+    public void Undo()
+    {
+        if (_commandHistory.Count > 0)
+        {
+            var command = _commandHistory.Pop();
+            command.Undo();
+        }
+    }
+}
+
+// Kullanım
+var fileManager = new FileManager();
+fileManager.ExecuteCommand(new CreateFileCommand("test.txt"));
+fileManager.ExecuteCommand(new DeleteFileCommand("test.txt"));
+fileManager.Undo(); // Delete'i geri al
+fileManager.Undo(); // Create'i geri al
+```
+
+---
+
+### `5. Repository Pattern nedir ve Unit of Work ile ilişkisi nedir?`
+
+**Cevap:** 
+Repository Pattern, veri erişim katmanını soyutlayarak business logic'i database detaylarından ayıran pattern'dir. Unit of Work ile birlikte transaction yönetimi sağlar.
+
+**Kaynak:** 
+- **Data Access Abstraction**: Veri erişimini soyutlama
+- **Testability**: Mock repository ile test kolaylığı
+- **Unit of Work**: Transaction boundary yönetimi
+- **Generic Repository**: Ortak CRUD işlemleri
+
+**Örnek:**
+```csharp
+// Generic Repository Interface
+public interface IRepository<T> where T : class
+{
+    Task<T> GetByIdAsync(int id);
+    Task<IEnumerable<T>> GetAllAsync();
+    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+    Task AddAsync(T entity);
+    void Update(T entity);
+    void Remove(T entity);
+}
+
+// Specific Repository Interface
+public interface IUserRepository : IRepository<User>
+{
+    Task<User> GetByEmailAsync(string email);
+    Task<IEnumerable<User>> GetActiveUsersAsync();
+    Task<bool> EmailExistsAsync(string email);
+}
+
+// Repository Implementation
+public class UserRepository : IUserRepository
+{
+    private readonly DbContext _context;
+    
+    public UserRepository(DbContext context)
+    {
+        _context = context;
+    }
+    
+    public async Task<User> GetByIdAsync(int id)
+    {
+        return await _context.Set<User>().FindAsync(id);
+    }
+    
+    public async Task<IEnumerable<User>> GetAllAsync()
+    {
+        return await _context.Set<User>().ToListAsync();
+    }
+    
+    public async Task<IEnumerable<User>> FindAsync(Expression<Func<User, bool>> predicate)
+    {
+        return await _context.Set<User>().Where(predicate).ToListAsync();
+    }
+    
+    public async Task AddAsync(User entity)
+    {
+        await _context.Set<User>().AddAsync(entity);
+    }
+    
+    public void Update(User entity)
+    {
+        _context.Set<User>().Update(entity);
+    }
+    
+    public void Remove(User entity)
+    {
+        _context.Set<User>().Remove(entity);
+    }
+    
+    public async Task<User> GetByEmailAsync(string email)
+    {
+        return await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == email);
+    }
+    
+    public async Task<IEnumerable<User>> GetActiveUsersAsync()
+    {
+        return await _context.Set<User>().Where(u => u.IsActive).ToListAsync();
+    }
+    
+    public async Task<bool> EmailExistsAsync(string email)
+    {
+        return await _context.Set<User>().AnyAsync(u => u.Email == email);
+    }
+}
+
+// Unit of Work Interface
+public interface IUnitOfWork : IDisposable
+{
+    IUserRepository Users { get; }
+    IOrderRepository Orders { get; }
+    IProductRepository Products { get; }
+    
+    Task<int> SaveChangesAsync();
+    Task BeginTransactionAsync();
+    Task CommitTransactionAsync();
+    Task RollbackTransactionAsync();
+}
+
+// Unit of Work Implementation
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly DbContext _context;
+    private IDbContextTransaction _transaction;
+    
+    public UnitOfWork(DbContext context)
+    {
+        _context = context;
+        Users = new UserRepository(_context);
+        Orders = new OrderRepository(_context);
+        Products = new ProductRepository(_context);
+    }
+    
+    public IUserRepository Users { get; }
+    public IOrderRepository Orders { get; }
+    public IProductRepository Products { get; }
+    
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _context.SaveChangesAsync();
+    }
+    
+    public async Task BeginTransactionAsync()
+    {
+        _transaction = await _context.Database.BeginTransactionAsync();
+    }
+    
+    public async Task CommitTransactionAsync()
+    {
+        await _transaction?.CommitAsync();
+    }
+    
+    public async Task RollbackTransactionAsync()
+    {
+        await _transaction?.RollbackAsync();
+    }
+    
+    public void Dispose()
+    {
+        _transaction?.Dispose();
+        _context?.Dispose();
+    }
+}
+
+// Service Layer with Repository Pattern
+public class UserService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    
+    public UserService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+    
+    public async Task<User> CreateUserAsync(CreateUserRequest request)
+    {
+        // Business logic validation
+        if (await _unitOfWork.Users.EmailExistsAsync(request.Email))
+        {
+            throw new BusinessException("Email already exists");
+        }
+        
+        var user = new User
+        {
+            Name = request.Name,
+            Email = request.Email,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
+        
+        await _unitOfWork.Users.AddAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+        
+        return user;
+    }
+    
+    public async Task TransferUserDataAsync(int fromUserId, int toUserId)
+    {
+        await _unitOfWork.BeginTransactionAsync();
+        
+        try
+        {
+            var fromUser = await _unitOfWork.Users.GetByIdAsync(fromUserId);
+            var toUser = await _unitOfWork.Users.GetByIdAsync(toUserId);
+            
+            // Transfer orders
+            var orders = await _unitOfWork.Orders.FindAsync(o => o.UserId == fromUserId);
+            foreach (var order in orders)
+            {
+                order.UserId = toUserId;
+                _unitOfWork.Orders.Update(order);
+            }
+            
+            // Deactivate old user
+            fromUser.IsActive = false;
+            _unitOfWork.Users.Update(fromUser);
+            
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
+    }
+}
+
+// Dependency Injection Registration
+services.AddScoped<IUserRepository, UserRepository>();
+services.AddScoped<IOrderRepository, OrderRepository>();
+services.AddScoped<IProductRepository, ProductRepository>();
+services.AddScoped<IUnitOfWork, UnitOfWork>();
+services.AddScoped<UserService>();
+```
