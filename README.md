@@ -4,6 +4,52 @@ Bu repository, interview hazırlığı sırasında çalıştığım konuların n
 
 ---
 
+## 📋 İçindekiler
+
+### 🌐 API & Backend
+
+- [Bir REST API'nin performansını artırmak için hangi teknikleri kullanırsın?](#bir-rest-apinin-performansını-artırmak-için-hangi-teknikleri-kullanırsın)
+- [REST API güvenliği için neler uygularsın?](#rest-api-güvenliği-için-neler-uygularsın)
+- [API Gateway bize ne sağlar?](#api-gateway-bize-ne-sağlar)
+- [Concurrency ile çalışan REST API'lerde race condition nasıl önlenir?](#concurrency-ile-çalışan-rest-apilerde-race-condition-nasıl-önlenir)
+- [Middleware Yapıları Nasıl Kurgulanmalı?](#middleware-yapıları-nasıl-kurgulanmalı)
+- [Token-based Authentication vs Session-based Authentication?](#token-based-authentication-vs-session-based-authentication)
+- [Bir API Endpoint'i Saniyede 1000 İstek Almaya Başlarsa Ne Yaparsın?](#bir-api-endpointi-saniyede-1000-istek-almaya-başlarsa-ne-yaparsın)
+- [Load Balancing Nedir?](#load-balancing-nedir)
+
+### 🗄️ Database & Veri Yönetimi
+
+- [Relational database'lerde normalization nedir? Ne zaman kullanılır, ne zaman kullanmamak gerekir?](#relational-databaselerde-normalization-nedir-ne-zaman-kullanılır-ne-zaman-kullanmamak-gerekir)
+
+### 🏗️ Mimari Desenler
+
+- [CQRS(Command Query Responsibility Segregation) ne zaman kullanılır?](#cqrscommand-query-responsibility-segregation-ne-zaman-kullanılır)
+- [Dependency Inversion nedir ve neden önemlidir?](#dependency-inversion-nedir-ve-neden-önemlidir)
+
+### 🎯 Nesne Tabanlı Programlama (OOP)
+
+- [Nesne Tabanlı Programlama (OOP) nedir ve temel prensipleri nelerdir?](#nesne-tabanlı-programlama-oop-nedir-ve-temel-prensipleri-nelerdir)
+- [Encapsulation (Kapsülleme) nedir ve neden önemlidir?](#encapsulation-kapsülleme-nedir-ve-neden-önemlidir)
+- [Inheritance (Kalıtım) nedir ve hangi durumlarda kullanılır?](#inheritance-kalıtım-nedir-ve-hangi-durumlarda-kullanılır)
+- [Polymorphism (Çok Biçimlilik) nedir ve türleri nelerdir?](#polymorphism-çok-biçimlilik-nedir-ve-türleri-nelerdir)
+- [Abstraction (Soyutlama) nedir ve nasıl sağlanır?](#abstraction-soyutlama-nedir-ve-nasıl-sağlanır)
+- [Composition vs Inheritance ne zaman kullanılır?](#composition-vs-inheritance-ne-zaman-kullanılır)
+- [Interface nedir ve Abstract Class'tan farkı nedir?](#interface-nedir-ve-abstract-classtan-farkı-nedir)
+- [Method Overriding vs Method Overloading nedir?](#method-overriding-vs-method-overloading-nedir)
+
+### 🔧 SOLID & Design Patterns
+
+- [SOLID prensipleri nelerdir?](#solid-prensipleri-nelerdir)
+- [Design Patterns nedir ve hangi kategorileri vardır?](#design-patterns-nedir-ve-hangi-kategorileri-vardır)
+- [En Yaygın 5 Design Pattern Nedir?](#en-yaygın-5-design-pattern-nedir)
+  - [1. Saga Pattern nedir ve ne zaman kullanılır?](#1-saga-pattern-nedir-ve-ne-zaman-kullanılır)
+  - [2. Factory Pattern nedir ve türleri nelerdir?](#2-factory-pattern-nedir-ve-türleri-nelerdir)
+  - [3. Observer Pattern nedir ve ne zaman kullanılır?](#3-observer-pattern-nedir-ve-ne-zaman-kullanılır)
+  - [4. Strategy Pattern nedir ve Command Pattern'dan farkı nedir?](#4-strategy-pattern-nedir-ve-command-patterndan-farkı-nedir)
+  - [5. Repository Pattern nedir ve Unit of Work ile ilişkisi nedir?](#5-repository-pattern-nedir-ve-unit-of-work-ile-ilişkisi-nedir)
+
+---
+
 ## 📝 Soru & Cevaplar
 
 ### `Bir REST API'nin performansını artırmak için hangi teknikleri kullanırsın?`
