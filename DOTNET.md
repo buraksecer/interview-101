@@ -2,6 +2,39 @@
 
 ---
 
+## 📋 İçindekiler
+
+### 🏗️ Temel .NET Core Konuları
+
+- [1. .NET Core'da MemoryCache ve DistributedCache farkı nedir?](#1-net-coreda-memorycache-ve-distributedcache-farkı-nedir)
+- [2. Asenkron programlama .NET'te nasıl yapılır?](#2-asenkron-programlama-nette-nasıl-yapılır)
+- [3. Singleton, Scoped, Transient servis ömürleri nedir? Ne zaman hangisi kullanılır?](#3-singleton-scoped-transient-servis-ömürleri-nedir-ne-zaman-hangisi-kullanılır)
+
+### 🗄️ Entity Framework & ORM
+
+- [4. Entity Framework nedir ve avantajları nelerdir?](#4-entity-framework-nedir-ve-avantajları-nelerdir)
+- [5. Code First vs Database First yaklaşımları nedir?](#5-code-first-vs-database-first-yaklaşımları-nedir)
+- [6. Migration nedir ve nasıl çalışır?](#6-migration-nedir-ve-nasıl-çalışır)
+- [7. Lazy Loading vs Eager Loading vs Explicit Loading nedir?](#7-lazy-loading-vs-eager-loading-vs-explicit-loading-nedir)
+- [8. N+1 Query Problem nedir ve nasıl çözülür?](#8-n1-query-problem-nedir-ve-nasıl-çözülür)
+- [9. DbContext lifecycle ve best practices nelerdir?](#9-dbcontext-lifecycle-ve-best-practices-nelerdir)
+- [10. Change Tracking nedir ve nasıl optimize edilir?](#10-change-tracking-nedir-ve-nasıl-optimize-edilir)
+- [11. Repository Pattern vs DbContext hangisini kullanmalı?](#11-repository-pattern-vs-dbcontext-hangisini-kullanmalı)
+- [12. EF Core vs EF 6 farkları nelerdir?](#12-ef-core-vs-ef-6-farkları-nelerdir)
+- [13. IEnumerable vs IQueryable farkı nedir?](#13-ienumerable-vs-iqueryable-farkı-nedir)
+- [14. Raw SQL kullanımı ve güvenlik nasıl sağlanır?](#14-raw-sql-kullanımı-ve-güvenlik-nasıl-sağlanır)
+
+### 🚀 .NET Versiyonları ve Yenilikler
+
+- [15. .NET 6 ile gelen yenilikler nelerdir?](#15-net-6-ile-gelen-yenilikler-nelerdir)
+- [16. .NET 7 ile gelen yenilikler nelerdir?](#16-net-7-ile-gelen-yenilikler-nelerdir)
+- [17. .NET 8 ile gelen yenilikler nelerdir?](#17-net-8-ile-gelen-yenilikler-nelerdir)
+- [18. .NET 9 ile gelen yenilikler nelerdir?](#18-net-9-ile-gelen-yenilikler-nelerdir)
+
+---
+
+## 📝 Soru & Cevaplar
+
 ### 1. `.NET Core'da MemoryCache ve DistributedCache farkı nedir?`
 **Cevap:**
 - MemoryCache, uygulama belleğinde çalışır, instance'a özeldir. Uygulama yeniden başlatılırsa cache silinir ve birden fazla instance arasında paylaşılmaz.
